@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XrooT Cyber Terminal v3.1.337</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-theme="dark">
+  <div class="matrix-bg">
+    <canvas id="matrix"></canvas>
+  </div>
+
+  <header class="terminal-header">
+    <div class="terminal-title">
+      <div class="ascii-logo">╔══╗
+║██║ XrooT
+╚══╝ v3.1.337</div>
+      <div class="title-text">
+        <strong>CYBER TERMINAL</strong>
+        <br><small>463 Operations | E/D System</small>
+      </div>
+    </div>
+    <div class="terminal-controls">
+      <button class="theme-toggle" onclick="toggleTheme()">
+        <span id="theme-text">◐ LIGHT MODE</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="status-bar">
+    <span>STATUS: <span id="connection-status" style="color: var(--accent-tertiary);">● ONLINE</span></span>
+    <span>OPERATIONS: <span id="ops-count">14</span> LOADED</span>
+    <span>SELECTED: <span id="selected-op">NONE</span></span>
+  </div>
+
+  <div class="main-container">
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>┌─ INPUT BUFFER</span>
+        <span>[READY]</span>
+      </div>
+      <div class="panel-body">
+        <div class="file-drop-zone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" class="file-input" accept="*/*">
+          <div>▲ DROP FILES HERE OR CLICK</div>
+          <small>Supports: TXT, JSON, XML, BIN, etc.</small>
+        </div>
+        <textarea class="code-editor" id="input-data" placeholder="// Enter your data here...
+// Supports: text, hex, base64, binary
+// Example: Hello World!"></textarea>
+      </div>
+    </div>
+
+    <!-- Operations Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>┌─ OPERATIONS</span>
+        <span>[LOADED]</span>
+      </div>
+      <div class="panel-body">
+        <div class="search-container">
+          <input type="text" class="search-input" id="search-ops" placeholder="Search operations...">
+          <span class="search-icon">⚡</span>
+        </div>
+        
+        <div class="categories-grid" id="categories"></div>
+        
+        <div class="operations-list" id="operations-list"></div>
+        
+        <div class="control-grid">
+          <button class="control-btn primary" onclick="executeOperation()">⚡ EXECUTE</button>
+          <button class="control-btn danger" onclick="clearAll()">✖ CLEAR</button>
+          <button class="control-btn" onclick="copyOutput()">⎘ COPY</button>
+          <button class="control-btn" onclick="downloadOutput()">⇩ SAVE</button>
+        </div>
+      </div>
+      <div class="status-display" id="status"></div>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel">
+      <div class="panel-header">
+        <span>┌─ OUTPUT BUFFER</span>
+        <span id="output-status">[EMPTY]</span>
+      </div>
+      <div class="panel-body">
+        <textarea class="code-editor" id="output-data" placeholder="// Results will appear here...
+// Ready for next operation" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

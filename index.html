@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>XrooT Cyber Terminal v3.1.337</title>
+  <title>XrooT Cyber Terminal v4.0</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-theme="dark">
@@ -15,13 +15,18 @@
     <div class="terminal-title">
       <div class="ascii-logo">╔══╗
 ║██║ XrooT
-╚══╝ v3.1.337</div>
+╚══╝ v4.0</div>
       <div class="title-text">
         <strong>CYBER TERMINAL</strong>
-        <br><small>463 Operations | E/D System</small>
+        <br><small><span id="ops-count">0</span> Operations | CyberChef Mode</small>
       </div>
     </div>
     <div class="terminal-controls">
+      <label class="auto-bake-label">
+        <input type="checkbox" id="auto-bake" checked>
+        <span>⚡ AUTO-BAKE</span>
+      </label>
+      <button class="bake-btn" onclick="bakeNow()">🔥 BAKE</button>
       <button class="theme-toggle" onclick="toggleTheme()">
         <span id="theme-text">◐ LIGHT MODE</span>
       </button>
@@ -30,67 +35,100 @@
 
   <div class="status-bar">
     <span>STATUS: <span id="connection-status" style="color: var(--accent-tertiary);">● ONLINE</span></span>
-    <span>OPERATIONS: <span id="ops-count">14</span> LOADED</span>
-    <span>SELECTED: <span id="selected-op">NONE</span></span>
+    <span>OPS: <span id="ops-count-bar">0</span> LOADED</span>
+    <span>RECIPE: <span id="recipe-count">0</span> STEPS</span>
+    <span>OUTPUT: <span id="output-info">0 bytes</span></span>
   </div>
 
   <div class="main-container">
-    <!-- Input Panel -->
-    <div class="panel">
-      <div class="panel-header">
-        <span>┌─ INPUT BUFFER</span>
-        <span>[READY]</span>
-      </div>
-      <div class="panel-body">
-        <div class="file-drop-zone" onclick="document.getElementById('file-input').click()">
-          <input type="file" id="file-input" class="file-input" accept="*/*">
-          <div>▲ DROP FILES HERE OR CLICK</div>
-          <small>Supports: TXT, JSON, XML, BIN, etc.</small>
-        </div>
-        <textarea class="code-editor" id="input-data" placeholder="// Enter your data here...
-// Supports: text, hex, base64, binary
-// Example: Hello World!"></textarea>
-      </div>
-    </div>
-
-    <!-- Operations Panel -->
-    <div class="panel">
+    <!-- Operations Panel (left column) -->
+    <div class="panel" id="ops-panel">
       <div class="panel-header">
         <span>┌─ OPERATIONS</span>
         <span>[LOADED]</span>
       </div>
-      <div class="panel-body">
+      <div class="panel-body ops-panel-body">
         <div class="search-container">
           <input type="text" class="search-input" id="search-ops" placeholder="Search operations...">
           <span class="search-icon">⚡</span>
         </div>
-        
         <div class="categories-grid" id="categories"></div>
-        
         <div class="operations-list" id="operations-list"></div>
-        
-        <div class="control-grid">
-          <button class="control-btn primary" onclick="executeOperation()">⚡ EXECUTE</button>
-          <button class="control-btn danger" onclick="clearAll()">✖ CLEAR</button>
-          <button class="control-btn" onclick="copyOutput()">⎘ COPY</button>
-          <button class="control-btn" onclick="downloadOutput()">⇩ SAVE</button>
-        </div>
       </div>
-      <div class="status-display" id="status"></div>
     </div>
 
-    <!-- Output Panel -->
-    <div class="panel">
-      <div class="panel-header">
-        <span>┌─ OUTPUT BUFFER</span>
-        <span id="output-status">[EMPTY]</span>
+    <!-- Middle column: Recipe Lane + Output -->
+    <div class="middle-column">
+      <!-- Recipe Lane -->
+      <div class="panel recipe-panel">
+        <div class="panel-header">
+          <span>┌─ RECIPE</span>
+          <div class="recipe-header-controls">
+            <button class="control-btn small danger" onclick="clearRecipe()">✖ CLEAR</button>
+            <button class="control-btn small" onclick="saveRecipe()">⇩ SAVE</button>
+            <button class="control-btn small" onclick="document.getElementById('recipe-file-input').click()">⇪ LOAD</button>
+            <input type="file" id="recipe-file-input" accept=".json" style="display:none" onchange="loadRecipeFile(event)">
+          </div>
+        </div>
+        <div class="recipe-body">
+          <div class="recipe-lane" id="recipe-lane">
+            <div class="recipe-empty" id="recipe-empty">
+              <div>▸ No operations in recipe</div>
+              <small>Click an operation from the left panel to add it</small>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="panel-body">
-        <textarea class="code-editor" id="output-data" placeholder="// Results will appear here...
-// Ready for next operation" readonly></textarea>
+
+      <!-- Output Panel -->
+      <div class="panel output-panel">
+        <div class="panel-header">
+          <span>┌─ OUTPUT BUFFER</span>
+          <div class="panel-header-right">
+            <span id="output-format-label" class="format-label">TEXT</span>
+            <span id="output-status">[EMPTY]</span>
+          </div>
+        </div>
+        <div class="panel-body output-panel-body">
+          <div class="io-meta-bar">
+            <span id="output-byte-count">0 bytes</span>
+            <span>|</span>
+            <span id="output-char-count">0 chars</span>
+          </div>
+          <textarea class="code-editor output-editor" id="output-data" placeholder="// Results will appear here..." readonly></textarea>
+          <div class="panel-actions">
+            <button class="control-btn small" onclick="copyOutput()">⎘ COPY</button>
+            <button class="control-btn small" onclick="downloadOutput()">⇩ SAVE</button>
+            <button class="control-btn small primary" onclick="useAsInput()">↑ USE AS INPUT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Panel (right column) -->
+    <div class="panel input-panel">
+      <div class="panel-header">
+        <span>┌─ INPUT BUFFER</span>
+        <div class="panel-header-right">
+          <span id="input-format-label" class="format-label">TEXT</span>
+          <span>[READY]</span>
+        </div>
+      </div>
+      <div class="panel-body input-panel-body">
+        <div class="file-drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" class="file-input" accept="*/*">
+          <div>▲ DROP FILES HERE OR CLICK</div>
+          <small>Supports: TXT, JSON, XML, BIN, etc.</small>
+        </div>
+        <textarea class="code-editor input-editor" id="input-data" placeholder="// Enter your data here...&#10;// Supports: text, hex, base64, binary&#10;// Example: Hello World!"></textarea>
+        <div class="panel-actions">
+          <button class="control-btn small danger" onclick="clearAll()">✖ CLEAR ALL</button>
+        </div>
       </div>
     </div>
   </div>
+
+  <div class="status-display" id="status"></div>
 
   <script src="js/script.js"></script>
 </body>
